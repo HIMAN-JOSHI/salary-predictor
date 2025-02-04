@@ -23,7 +23,11 @@ const JobSearchForm = ({onJobDetails }) => {
 
             // TODO : Add one more check here for pattern matching.
 
-            const { data } = await axios.get(jobUrl);
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000/api/fetch-data?url=";
+            const finalUrl = `${backendUrl}${jobUrl}`;
+
+            const { data } = await axios.get(finalUrl);
+
             onJobDetails(data);
         } catch{
             setErrorMessage("Error occured while getting the job. Please ");

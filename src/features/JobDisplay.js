@@ -1,7 +1,7 @@
 const JobDisplay = ({ jobData }) => {
     if (!jobData) return <p style={styles.message}>Enter a valid job URL to fetch details.</p>;
   
-    const { title, location, employmentType, description, applyUrl } = jobData;
+    const { title, location, employmentType, descriptionHtml, applyUrl } = jobData;
   
     return (
       <div style={styles.container}>
@@ -10,7 +10,13 @@ const JobDisplay = ({ jobData }) => {
         <p style={styles.info}><strong>Employment Type:</strong> {employmentType || "Not specified"}</p>
         
         <div style={styles.description}>
-            {description ? <p>{description}</p> : <p>No description available.</p>}
+            
+          {descriptionHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+            ) : (
+              <p>No description available.</p>
+            )}
+
         </div>
 
         {applyUrl ? (
