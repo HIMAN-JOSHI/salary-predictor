@@ -1,5 +1,74 @@
 import { useState } from "react";
 import axios from "axios";
+import Logger from 'js-logger';
+
+// Function to fetch job data using the jobPostingId
+async function getJobData(jobPostingId) {
+
+  try {
+    const payload = {
+      operationName: "ApiJobPosting",
+      variables: {
+        organizationHostedJobsPageName: "cohere",
+        jobPostingId: jobPostingId
+      },
+      query: `query ApiJobPosting($organizationHostedJobsPageName: String!, $jobPostingId: String!) {
+        jobPosting(
+          organizationHostedJobsPageName: $organizationHostedJobsPageName
+          jobPostingId: $jobPostingId
+        ) {
+          title
+          locationName
+          workplaceType
+          employmentType
+          descriptionHtml  
+          __typename
+        }
+      }`
+    };
+
+    Logger.info(`Fetching job data for jobPostingId: ${jobPostingId}`);
+
+    const response = await axios.post(
+      'https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobPosting',
+      payload
+    );
+
+    const jobPosting = response.data.data.jobPosting;
+
+    if (!jobPosting) {
+      Logger.warn("Job posting not found.");
+      return null;
+    }
+
+    const jobData = {
+      title: jobPosting.title,
+      locationName: jobPosting.locationName,
+      workplaceType: jobPosting.workplaceType,
+      employmentType: jobPosting.employmentType,
+      descriptionHtml: jobPosting.descriptionHtml
+    };
+
+    Logger.info(`Job data fetched successfully: ${JSON.stringify(jobData, null, 2)}`);
+
+    return jobData;
+
+  } catch (error) {
+    Logger.error("Error fetching job data:", error);
+    if (error.response) {
+      Logger.error("Response data:", error.response.data);
+      Logger.error("Response status:", error.response.status);
+      Logger.error("Response headers:", error.response.headers);
+    } else if (error.request) {
+      Logger.error("Request error:", error.request);
+    } else {
+      Logger.error("Error message:", error.message);
+    }
+    return null;
+  }
+}
+
+
 
 const JobSearchForm = ({onJobDetails }) => {
     const [jobUrl, setJobUrl] = useState("");
@@ -22,17 +91,24 @@ const JobSearchForm = ({onJobDetails }) => {
             }
 
             // TODO : Add one more check here for pattern matching.
+                      
+            
+            const jobIdMatch = parsedUrl.href.match(/\/([^\/]+)$/);
+            if (!jobIdMatch || jobIdMatch.length < 2) {
+              throw new Error("Invalid URL format, unable to extract jobId");
+            }
+            
 
-            const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000/api/fetch-data?url=";
-            const finalUrl = `${backendUrl}${jobUrl}`;
+            const jobId = jobIdMatch[1];
+            Logger.info("JobId: ", jobId);
 
-            const { data } = await axios.get(finalUrl);
+            const jobData = await getJobData(jobId);
 
-            onJobDetails(data);
-        } catch{
-            setErrorMessage("Error occured while getting the job. Please ");
+            onJobDetails(jobData);
+        } catch(error) {
+            Logger.error("Error occured while getting the job. Please ", error);
+            setErrorMessage("Error occured while getting the job. Please ", error);
             onJobDetails(null);
-
         }
     };
 
