@@ -1,6 +1,6 @@
 import Logger from 'js-logger';
 
-const api = process.env.REACT_APP_OPENAI; 
+const api = process.env.REACT_APP_OPENAI ; 
 
 export async function predictSalary(prompt, onChunk) {
     try {

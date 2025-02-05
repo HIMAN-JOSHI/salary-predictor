@@ -1,55 +1,57 @@
+import React from 'react';
+import JobTitle from '../components/jobTitle';
+import JobInfo from '../components/JobInfo';
+import JobDescription from '../components/JobDescription';
+import SalaryPrediction from '../components/SalaryPrediction';
 
-const JobDisplay = ({ jobData, salaryPrediction }) => {
-  
-    if (!jobData) return <p style={styles.message}>Enter a valid job URL to fetch details.</p>;
-  
-    const { title, location, employmentType, descriptionHtml } = jobData;
-  
-    return (
-      <div style={styles.container}>
-        <h2 style={styles.title}>{title}</h2>
-        <p style={styles.info}><strong>Location:</strong> {location || "Remote"}</p>
-        <p style={styles.info}><strong>Employment Type:</strong> {employmentType || "Not specified"}</p>
-        
-        <div style={styles.description}>
-            
-          {descriptionHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
-            ) : (
-              <p>No description available.</p>
-            )}
+const JobDisplay = ({ jobData, salaryPrediction, onGetSalary, isLoading }) => {
+  if (!jobData) {
+    return <p style={styles.message}>Enter a valid job URL to fetch details.</p>;
+  }
 
-        </div>
+  const { title, locationName, employmentType, descriptionHtml } = jobData;
 
-        <div style={styles.salaryStream}>
-          <h3>Salary Prediction</h3>
-          <p>{salaryPrediction || "Loading salary prediction..."}</p>
+  return (
+    <div style={styles.container}>
+      <JobTitle title={title} />
+      <JobInfo location={locationName} employmentType={employmentType} />
+      <JobDescription descriptionHtml={descriptionHtml} />
 
-        </div>
+      {/* Predict Salary Button */}
+      <button 
+        style={styles.button} 
+        onClick={onGetSalary} 
+        disabled={isLoading}
+      >
+        {isLoading ? "Predicting Salary..." : "Get Salary"}
+      </button>
 
-      </div>
-    );
-  };
-  
-  const styles = {
-    container: { maxWidth: "600px", margin: "20px auto", padding: "20px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#fff" },
-    title: { fontSize: "24px", marginBottom: "10px", color: "#333" },
-    info: { fontSize: "16px", color: "#555", margin: "5px 0" },
-    description: { marginTop: "15px", lineHeight: "1.6", color: "#444" },
-    applyButton: { display: "block", marginTop: "20px", padding: "10px", backgroundColor: "#007bff", color: "#fff", textAlign: "center", textDecoration: "none", borderRadius: "5px" },
-    message: { textAlign: "center", color: "#888", fontSize: "16px" },
-    salaryStream: {
-      marginTop: "20px",
-      padding: "10px",
-      border: "1px solid #ccc",
-      borderRadius: "5px",
-      backgroundColor: "#f9f9f9",
-      maxHeight: "200px",    // Set a maximum height for the display area
-      overflowY: "auto",     // Enable vertical scrolling when content overflows
-      whiteSpace: "pre-wrap" // Preserve line breaks and wrap text as needed
-    }
-  
-  };
-  
-  export default JobDisplay;
-  
+      <SalaryPrediction salaryPrediction={salaryPrediction} />
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    maxWidth: "600px",
+    margin: "20px auto",
+    padding: "20px",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    backgroundColor: "#fff"
+  },
+  message: { textAlign: "center", color: "#888", fontSize: "16px" },
+  button: {
+    display: "block",
+    margin: "20px auto",
+    padding: "10px 20px",
+    backgroundColor: "#28a745",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px"
+  }
+};
+
+export default JobDisplay;
