@@ -1,6 +1,5 @@
 import { useState } from "react";
 import JobFetcher from './features/JobFetcher';
-import JobDisplay from './features/JobDisplay';
 import Logger from 'js-logger';
 
 const App = () => {
@@ -10,7 +9,6 @@ const App = () => {
     <div style={styles.container}>
       <h1 style={styles.title}>Job Details Viewer</h1>
       <JobFetcher onJobDetails={setJobData} />
-      <JobDisplay jobData={jobData} />
     </div>
   );
 };

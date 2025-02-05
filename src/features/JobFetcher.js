@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import Logger from 'js-logger';
+import { predictSalary } from "./predictSalary";
+import JobDisplay from "./JobDisplay";
 
 // Function to fetch job data using the jobPostingId
 async function getJobData(jobPostingId) {
@@ -68,12 +70,13 @@ async function getJobData(jobPostingId) {
   }
 }
 
-
-
 const JobSearchForm = ({onJobDetails }) => {
     const [jobUrl, setJobUrl] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-    
+    const [jobData, setJobData] = useState(null);
+    const [prompt, setPrompt] = useState("");
+    const [salaryPrediction, setSalaryPrediction] = useState("");
+
     const handleJobFetch = async (e) => {
         e.preventDefault();
         setErrorMessage("");
@@ -102,18 +105,49 @@ const JobSearchForm = ({onJobDetails }) => {
             const jobId = jobIdMatch[1];
             Logger.info("JobId: ", jobId);
 
-            const jobData = await getJobData(jobId);
+            const fetchedJobData = await getJobData(jobId);
+            if(!fetchedJobData){
+              throw new Error("Job data not found.");
+            }
+            setJobData(fetchedJobData);
+            onJobDetails(fetchedJobData);
 
-            onJobDetails(jobData);
+            // Build the prompt using fetched job data and update the prompt state.
+            const prompt = `
+            Given the job information:
+            
+            Title: ${fetchedJobData.title}
+            Location: ${fetchedJobData.locationName}
+            Employment Type: ${fetchedJobData.employmentType}
+            Workplace Type: ${fetchedJobData.workplaceType}
+            Description: ${fetchedJobData.descriptionHtml}
+            
+            Predict the expected salary for this job position in USD.
+                `;
+
+            setPrompt(prompt);
+            
         } catch(error) {
-            Logger.error("Error occured while getting the job. Please ", error);
-            setErrorMessage("Error occured while getting the job. Please ", error);
+            Logger.error("Error occured while getting the job: ", error);
+            setErrorMessage("Error occured while getting the job. ", error);
             onJobDetails(null);
         }
     };
 
-    return (
+    const handlePredictSalary = async() => {
+        if(prompt){
+          setSalaryPrediction("");
+          await predictSalary(prompt, (chunk) =>{
+            setSalaryPrediction((prev) => prev + chunk);
+          });
+        }else {
+          Logger.error("Prompt is empty. Fetch job data first.");
+        }
 
+    };
+
+    return (
+      <div>
         <form onSubmit={handleJobFetch} style={styles.form}>
             <label htmlFor="jobUrl" style={styles.label}>Enter Job URL:</label>
             <input 
@@ -124,12 +158,15 @@ const JobSearchForm = ({onJobDetails }) => {
             onChange={(e) => setJobUrl(e.target.value)}
             style={styles.input}
             />
-            <button type="submit" style={styles.button}>Get Job</button>
+            <button style={styles.button} type="submit">Get Job</button>
+
+            <button style={styles.button} type="button" onClick={handlePredictSalary} disabled={!jobData}>Get Salary</button>
 
             {errorMessage ? <p style={styles.error}>{errorMessage}</p> : null}
            
         </form>
-
+        <JobDisplay jobData={jobData} salaryPrediction={salaryPrediction} />
+      </div>
     )
 };
 
